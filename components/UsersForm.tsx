@@ -11,7 +11,7 @@ export default function UserForm() {
     id: null,
     name: "",
     email: "",
-    role: "user",
+    role: "",
   });
 
   const handleUserSubmit = async (e: FormEvent) => {
@@ -30,7 +30,7 @@ export default function UserForm() {
       if (res.ok) {
         setStatus(data.message || "Success!");
         setStatusType("success");
-        setUserForm({ id: null, name: "", email: "", role: "user" });
+        setUserForm({ id: null, name: "", email: "", role: "" });
       } else {
         setStatus(data.error || "Failed to save user.");
         setStatusType("error");
