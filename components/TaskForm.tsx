@@ -9,6 +9,7 @@ export default function TaskForm() {
 
   const [taskForm, setTaskForm] = useState({
     title: "",
+    assignee: "",
     description: "",
     type: "task",
     priority: "medium",
@@ -36,6 +37,7 @@ export default function TaskForm() {
         setStatusType("success");
         setTaskForm({
           title: "",
+          assignee: "",
           description: "",
           type: "task",
           priority: "medium",
@@ -72,6 +74,15 @@ export default function TaskForm() {
             placeholder="Title"
             value={taskForm.title}
             onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+            className="w-full border px-3 py-3 rounded text-lg"
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Assignee"
+            value={taskForm.assignee}
+            onChange={(e) => setTaskForm({ ...taskForm, assignee: e.target.value })}
             className="w-full border px-3 py-3 rounded text-lg"
             required
           />

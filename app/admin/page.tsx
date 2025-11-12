@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import TaskForm from "@/components/TaskForm";
-import UsersForm from "@/components/UsersForm";
-import UsersList from "@/components/UsersList";
 
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<"database" | "users" | "tasks">("database");
@@ -103,9 +101,6 @@ export default function AdminPage() {
                     )}
                 </div>
             )}
-
-            {activeTab === "users" && <><UsersForm />
-            <UsersList /></>}
             {activeTab === "tasks" && <TaskForm />}
         </div>
     );

@@ -1,57 +1,48 @@
+"use client";
+
 import { useState, useEffect, FormEvent } from "react";
-import {
-  Note,
-  PaintBrushBroad,
-  Target,
-  ArrowDown,
-  Equals,
-  ArrowUp,
-  Hourglass,
-  SpinnerGap,
-  CheckCircle,
-} from "phosphor-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faFloppyDisk, faTimes, faArrowRotateLeft, faTentArrowLeftRight, faArrowCircleLeft, faArrowLeftLong, faArrowRight, faArrowRightLong, faArrowAltCircleRight, faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { ArrowSquareLeft } from "phosphor-react";
+import { faArrowAltCircleLeft } from "@fortawesome/free-solid-svg-icons/faArrowAltCircleLeft";
+import TaskModal from "./TaskModal";
 
-const typeIcons = {
-  task: <Note size={20} weight="fill" className="text-blue-500" />,
-  chore: <PaintBrushBroad size={20} weight="fill" className="text-yellow-500" />,
-  goal: <Target size={20} weight="fill" className="text-purple-500" />,
-};
-
-const priorityIcons = {
-  low: <ArrowDown size={20} weight="fill" className="text-green-500" />,
-  medium: <Equals size={20} weight="fill" className="text-orange-500" />,
-  high: <ArrowUp size={20} weight="fill" className="text-red-500" />,
-};
-
-const statusIcons = {
-  future: <Hourglass size={20} weight="fill" className="text-gray-500" />,
-  in_progress: <SpinnerGap size={20} weight="fill" className="text-blue-500 animate-spin" />,
-  completed: <CheckCircle size={20} weight="fill" className="text-green-600" />,
-};
-
-type Task = {
+interface Task {
   id: number;
   title: string;
-  description: string;
-  type: "task" | "chore" | "goal";
-  priority: "low" | "medium" | "high";
-  status: "future" | "in_progress" | "completed";
+  assignee: string;
+  description?: string;
+  type?: string;
+  priority?: string;
+  status?: string;
   start_date?: string;
   due_date?: string;
   recurrence?: string;
   notes?: string;
-};
+}
+
+const familyMembers = ["Asher", "Ellie", "Evan", "Owen", "Katie", "Eric"];
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Task>>({});
+  const [quickAddMember, setQuickAddMember] = useState<string | null>(null);
+  const [quickAddTitle, setQuickAddTitle] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showOverdue, setShowOverdue] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const fetchTasks = async () => {
     const res = await fetch("/api/tasks");
     const data = await res.json();
-    if (data.success) setTasks(data.tasks);
+    if (data.success) {
+      const normalizedTasks = data.tasks.map((task: Task) => ({
+        ...task,
+        due_date: task.due_date ? new Date(task.due_date) : null,
+        start_date: task.start_date ? new Date(task.start_date) : null,
+      }));
+      setTasks(normalizedTasks);
+    }
     setLoading(false);
   };
 
@@ -59,183 +50,319 @@ export default function TaskList() {
     fetchTasks();
   }, []);
 
-  const handleDelete = async (id: number) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this task?");
-    if (!confirmDelete) return;
-
-    const res = await fetch("/api/tasks", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      setTasks((prev) => prev.filter((task) => task.id !== id));
-    } else {
-      alert("Failed to delete task.");
-    }
-  };
-
-  const handleEdit = (task: Task) => {
-    setEditingTaskId(task.id);
-    setEditForm(task);
-  };
-
-  const handleEditChange = (field: keyof Task, value: string) => {
-    setEditForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleEditSubmit = async (e: FormEvent) => {
+  const handleQuickAddSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editForm.id) return;
+    if (!quickAddTitle || !quickAddMember) return;
 
-    const res = await fetch("/api/tasks", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editForm),
-    });
+    const newTask = {
+      title: quickAddTitle,
+      assignee: quickAddMember,
+      description: "",
+      type: "",
+      priority: "",
+      start_date: "",
+      due_date: selectedDate.toISOString(), // ✅ Convert to ISO
+      recurrence: "",
+      notes: "",
+      status: "incomplete",
+    };
 
-    const data = await res.json();
-    if (data.success) {
-      fetchTasks();
-      setEditingTaskId(null);
-    } else {
-      alert("Failed to update task.");
+
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTask),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setQuickAddTitle("");
+        setQuickAddMember(null);
+        fetchTasks();
+      } else {
+        alert(data.error || "Failed to create task.");
+      }
+    } catch {
+      alert("Network error while creating task.");
     }
   };
+
+  const toggleTaskStatus = async (task: Task) => {
+    const newStatus = task.status === "complete" ? "incomplete" : "complete";
+
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: task.id, status: newStatus }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
+        );
+      } else {
+        alert(data.error || "Failed to update status.");
+      }
+    } catch {
+      alert("Network error while updating status.");
+    }
+  };
+
+  const goToPreviousDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedDate(prev);
+  };
+
+  const goToNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedDate(next);
+  };
+
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "";
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleDateString();
+  };
+
+  const getMemberColor = (member: string) => {
+    switch (member) {
+      case "Asher":
+        return "member-asher";
+      case "Ellie":
+        return "member-ellie";
+      case "Evan":
+        return "member-evan";
+      case "Owen":
+        return "member-owen";
+      case "Katie":
+        return "member-katie";
+      case "Eric":
+        return "member-eric";
+      default:
+        return "";
+    }
+  };
+
+  const formatForInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
 
   if (loading) return <p className="mt-6 text-gray-500">Loading tasks...</p>;
 
   return (
-    <div className="mt-6">
-      <h2 className="text-xl font-semibold mb-2">Existing Tasks</h2>
-      {tasks.length === 0 ? (
-        <p className="text-gray-500">No tasks found.</p>
-      ) : (
-        <ul className="space-y-2">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className="flex border rounded shadow-sm overflow-hidden"
-            >
-              <div
-                className={`w-2 ${task.status === "future"
-                    ? "bg-yellow-400"
-                    : task.status === "completed" && task.due_date && new Date(task.due_date) < new Date()
-                      ? "bg-red-500"
-                      : "bg-green-500"
-                  }`}
-              />
-              <div className="flex-1 p-4">
-                {editingTaskId === task.id ? (
-                  <form onSubmit={handleEditSubmit} className="space-y-3">
-                    <input
-                      type="text"
-                      value={editForm.title || ""}
-                      onChange={(e) => handleEditChange("title", e.target.value)}
-                      className="w-full border px-3 py-2 rounded"
-                      required
-                    />
-                    <textarea
-                      value={editForm.description || ""}
-                      onChange={(e) => handleEditChange("description", e.target.value)}
-                      className="w-full border px-3 py-2 rounded"
-                    />
-                    <div className="flex gap-4">
-                      <select
-                        value={editForm.type || "task"}
-                        onChange={(e) => handleEditChange("type", e.target.value)}
-                        className="border px-3 py-2 rounded"
-                      >
-                        <option value="task">Task</option>
-                        <option value="chore">Chore</option>
-                        <option value="goal">Goal</option>
-                      </select>
-                      <select
-                        value={editForm.priority || "medium"}
-                        onChange={(e) => handleEditChange("priority", e.target.value)}
-                        className="border px-3 py-2 rounded"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                    <div className="flex gap-4">
-                      <input
-                        type="date"
-                        value={editForm.due_date || ""}
-                        onChange={(e) => handleEditChange("due_date", e.target.value)}
-                        className="border px-3 py-2 rounded w-full"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Recurrence"
-                      value={editForm.recurrence || ""}
-                      onChange={(e) => handleEditChange("recurrence", e.target.value)}
-                      className="w-full border px-3 py-2 rounded"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingTaskId(null)}
-                        className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
+    <div className="flex text-center flex-col">
+      <div className="absolute top-0 right-0 p-4">
+        <button
+          onClick={() => window.location.reload()}
+          className="btn-secondary mr-2">
+          <FontAwesomeIcon icon={faRefresh}></FontAwesomeIcon>
+        </button>
+      </div>
+      <div className="mb-2 font-bold">
+        <h1 className="page-title text-xl mb-2">
+          {selectedDate.toLocaleDateString("en-US", {
+            weekday: "long",    // e.g., Wednesday
+            year: "numeric",    // e.g., 2025
+            month: "long",      // e.g., November
+            day: "numeric",     // e.g., 12
+          })}
+        </h1>
+      </div>
+
+      {/* Calendar Filter */}
+      <div className="calendar-nav justify-center flex text-sm">
+        <button onClick={goToPreviousDay} className="btn-secondary mr-2">
+          <FontAwesomeIcon icon={faArrowLeftLong}></FontAwesomeIcon>
+        </button>
+
+        {/* Date Picker */}
+        <input
+          type="date"
+          value={formatForInput(selectedDate)} // ✅ Local date
+          onChange={(e) => {
+            const newDate = new Date(e.target.value + "T00:00:00"); // ✅ Force local midnight
+            setSelectedDate(newDate);
+          }}
+          className="border rounded px-2 py-1"
+        />
+        <button onClick={goToNextDay} className="btn-secondary ml-2">
+          <FontAwesomeIcon icon={faArrowRightLong}></FontAwesomeIcon>
+        </button>
+
+      </div>
+
+      {/* Show Overdue Toggle */}
+
+      <div className="flex items-center gap-2 mb-2 mt-2">
+        <input
+          type="checkbox"
+          checked={showOverdue}
+          onChange={() => setShowOverdue((prev) => !prev)}
+          className="cursor-pointer"
+        />
+        <label className="text-gray-700 text-sm">Show overdue</label>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-1 text-left">
+        {familyMembers.map((member) => {
+          const memberTasks = tasks.filter((task) => {
+            if (task.assignee !== member) return false;
+            if (!task.due_date) return true;
+
+            const taskDate = task.due_date ? new Date(task.due_date) : null;
+
+            if (showOverdue) {
+              return (
+                taskDate &&
+                ((taskDate < selectedDate && task.status === "incomplete") ||
+                  taskDate.toDateString() === selectedDate.toDateString())
+              );
+            }
+
+            return taskDate && taskDate.toDateString() === selectedDate.toDateString();
+
+          });
+
+          return (
+
+            <div key={member} className="flex flex-col mb-2">
+
+              {/* Header */}
+              <div className={`member-header ${getMemberColor(member)}`}>
+                <h3>{member}</h3>
+                <button
+                  onClick={() => setQuickAddMember(member)}
+                  className="quick-add-btn"
+                  title={`Add task for ${member}`}
+                >
+                  <FontAwesomeIcon color={"black"} icon={faPlus} />
+                </button>
+              </div>
+
+              {/* Tasks */}
+              <div className="task-list">
+                {(memberTasks.length === 0) ? (
+                  <>
+                    {quickAddMember !== member && <>
+                      <p className="no-tasks">No tasks</p>
+                    </>
+                    }
+                  </>
+
                 ) : (
-                  <div onClick={() => handleEdit(task)}>
-                    <div className="font-bold text-lg flex items-center gap-2">
-                      {task.title}
+                  memberTasks.map((task) => (
+
+                    <div key={task.id} className="task-card"
+                    >
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={task.status === "complete"}
+                          style={{ width: "24px", height: "24px" }} // ✅ Object, not string
+                          onChange={() => toggleTaskStatus(task)}
+                          className={`cursor-pointer ${getMemberColor(member)}`}
+                        />
+                        <div onClick={() => setSelectedTask(task)} className="w-full">
+                          <div
+                            className={`task-title ${task.status === "complete" ? "line-through text-gray-500" : ""
+                              }`}
+                          >
+                            {task.title}
+                          </div>
+                        </div>
+                        {formatDate(task.due_date) !== selectedDate.toLocaleDateString() && (
+                          <div className="task-date ml-5">
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {task.status !== 'completed' &&
-                      <>
-                        <div className="text-sm text-gray-600">{task.description}</div>
 
-                        <div className="text-sm flex flex-wrap gap-4 mt-1">
-                          <span className="flex items-center gap-1">
-                            {priorityIcons[task.priority]}
-                            <span className="font-medium">Effort:</span> {task.priority}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            {statusIcons[task.status]}
-                            <span className="font-medium">Status:</span> {task.status}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            {typeIcons[task.type]}
-                            <span className="font-medium">Type:</span> {task.type}
-                          </span>
-                        </div>
-                      </>}
-                        <div className="text-sm text-gray-500 mt-1">
-                        {task.status !== 'completed' ? "Due " : "Done " } 
-                        {task.due_date ? new Date(task.due_date).toLocaleDateString() : "N/A"}
-                        </div>
-
-                  </div>
+                  ))
                 )}
 
               </div>
-              <button
-                onClick={() => handleDelete(task.id)}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition w-full sm:w-auto mt-2 sm:mt-0"
-              >
-                Delete Task
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+              {selectedTask && (
+                <TaskModal
+                  task={selectedTask}
+                  onClose={() => setSelectedTask(null)}
+                  onSave={async (updatedTask) => {
+                    const res = await fetch("/api/tasks", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(updatedTask),
+                    });
+                    if (res.ok) {
+                      fetchTasks();
+                      setSelectedTask(null);
+                    } else {
+                      alert("Failed to save changes");
+                    }
+                  }}
+                  onDelete={async (taskId) => {
+                    const res = await fetch("/api/tasks", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ id: taskId }),
+                    });
+                    if (res.ok) {
+                      fetchTasks();
+                      setSelectedTask(null);
+                    } else {
+                      alert("Failed to delete task");
+                    }
+                  }}
+                />
+              )}
+
+              {/* Quick Add Form */}
+              {quickAddMember === member && (
+                <div className="border-1 rounded-sm flex mt-2">
+                  <div className="flex">
+                    <form onSubmit={handleQuickAddSubmit} className="quick-add-form">
+                      <input
+                        type="text"
+                        placeholder="Task title"
+                        value={quickAddTitle}
+                        onChange={(e) => setQuickAddTitle(e.target.value)}
+                        required
+                      />
+                    </form>
+                  </div>
+                  <div className="flex">
+                    <button
+                      onClick={handleQuickAddSubmit}
+                      className="btn-primary" title="Save">
+                      <FontAwesomeIcon icon={faFloppyDisk} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      title="Cancel"
+                      color={"red"}
+                      onClick={() => {
+                        setQuickAddMember(null);
+                        setQuickAddTitle("");
+                      }}
+                    >
+                      <FontAwesomeIcon color="red" icon={faTimes} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          );
+        })}
+      </div>
     </div>
   );
 }

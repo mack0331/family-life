@@ -24,3 +24,60 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+.calendar-nav {
+  flex: auto;
+}
+
+.member-header {
+  @apply flex justify-between items-center p-4 rounded-t-lg font-bold text-lg text-gray-800;
+}
+
+.quick-add-btn {
+  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-white font-bold;
+}
+
+.quick-add-form {
+  @apply flex gap-2 p-2;
+}
+
+.task-list {
+  @apply mt-2 space-y-2;
+}
+
+.task-card {
+  @apply border rounded p-2 bg-white shadow-sm hover:shadow-md transition;
+}
+
+.task-title {
+  @apply font-semibold;
+}
+
+.task-date {
+  @apply text-xs text-gray-500;
+}
+
+.task-status {
+  @apply text-xs mt-1;
+}
+
+.status-complete {
+  @apply text-green-600;
+}
+
+.status-incomplete {
+  @apply text-red-600;
+}
+
+.no-tasks {
+  @apply text-gray-400 text-sm text-center;
+}
+
+/* Colors for members */
+.member-asher { background-color: #22ac00; }
+.member-ellie { background-color: #20dfd5; }
+.member-evan { background-color: #5c8df5; }
+.member-owen { background-color: #f3b43f; }
+.member-katie { background-color: #c63ce6a8; }
+.member-eric { background-color: #df3838c7; }
+
+

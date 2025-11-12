@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex">
         <Sidebar />
-        <main className="ml-64 w-full p-6">{children}</main>
+        <main className="ml-42 w-full p-6">{children}</main>
       </body>
     </html>
 
