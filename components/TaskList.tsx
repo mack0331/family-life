@@ -2,9 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faFloppyDisk, faTimes, faArrowRotateLeft, faTentArrowLeftRight, faArrowCircleLeft, faArrowLeftLong, faArrowRight, faArrowRightLong, faArrowAltCircleRight, faRefresh } from "@fortawesome/free-solid-svg-icons";
-import { ArrowSquareLeft } from "phosphor-react";
-import { faArrowAltCircleLeft } from "@fortawesome/free-solid-svg-icons/faArrowAltCircleLeft";
+import { faPlus, faFloppyDisk, faTimes, faArrowLeftLong,  faArrowRightLong, faRefresh } from "@fortawesome/free-solid-svg-icons";
 import TaskModal from "./TaskModal";
 
 interface Task {
@@ -127,24 +125,17 @@ export default function TaskList() {
     return d.toLocaleDateString();
   };
 
-  const getMemberColor = (member: string) => {
-    switch (member) {
-      case "Asher":
-        return "member-asher";
-      case "Ellie":
-        return "member-ellie";
-      case "Evan":
-        return "member-evan";
-      case "Owen":
-        return "member-owen";
-      case "Katie":
-        return "member-katie";
-      case "Eric":
-        return "member-eric";
-      default:
-        return "";
-    }
-  };
+const getMemberColor = (member: string) => {
+  switch (member) {
+    case "Asher": return "#22ac00";
+    case "Ellie": return "#20dfd5";
+    case "Evan": return "#5c8df5";
+    case "Owen": return "#f3b43f";
+    case "Katie": return "#c63ce6a8";
+    case "Eric": return "#df3838c7";
+    default: return "#ccc";
+  }
+};
 
   const formatForInput = (date: Date) => {
     const year = date.getFullYear();
@@ -235,7 +226,9 @@ export default function TaskList() {
             <div key={member} className="flex flex-col mb-2">
 
               {/* Header */}
-              <div className={`member-header ${getMemberColor(member)}`}>
+              <div className="member-header"
+              style={{ backgroundColor: getMemberColor(member) }}
+              >
                 <h3>{member}</h3>
                 <button
                   onClick={() => setQuickAddMember(member)}
@@ -260,9 +253,10 @@ export default function TaskList() {
                   memberTasks.map((task) => (
 
                     <div key={task.id} className="task-card"
+                    style={{ borderColor: getMemberColor(member) }}
                     >
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-row gap-2">
                         <input
                           type="checkbox"
                           checked={task.status === "complete"}
@@ -270,21 +264,23 @@ export default function TaskList() {
                           onChange={() => toggleTaskStatus(task)}
                           className={`cursor-pointer ${getMemberColor(member)}`}
                         />
-                        <div onClick={() => setSelectedTask(task)} className="w-full">
-                          <div
-                            className={`task-title ${task.status === "complete" ? "line-through text-gray-500" : ""
+                        <div onClick={() => setSelectedTask(task)} 
+                      
+                            className={`task-title w-full ${task.status === "complete" ? "line-through text-gray-500" : ""
                               }`}
                           >
                             {task.title}
                           </div>
                         </div>
                         {formatDate(task.due_date) !== selectedDate.toLocaleDateString() && (
-                          <div className="task-date ml-5">
+                          <div className="task-date ml-7">
+                            <span className="text-red-600">
                             {new Date(task.due_date).toLocaleDateString()}
+                            </span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    
 
                   ))
                 )}
@@ -325,7 +321,7 @@ export default function TaskList() {
 
               {/* Quick Add Form */}
               {quickAddMember === member && (
-                <div className="border-1 rounded-sm flex mt-2">
+                <div className={`border-1 rounded-sm flex ${memberTasks.length === 0 ? '' : 'mt-2'}`}>
                   <div className="flex">
                     <form onSubmit={handleQuickAddSubmit} className="quick-add-form">
                       <input

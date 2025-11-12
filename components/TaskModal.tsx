@@ -38,7 +38,7 @@ export default function TaskModal({ task, onClose, onSave, onDelete }: TaskModal
   const [editedTask, setEditedTask] = useState<Task>(task);
 
   return (
-    <div className="fixed inset-0 bg-gray bg-opacity-50 flex items-center justify-center z-50">        
+    <div className="ml-36 fixed inset-0 bg-gray bg-opacity-50 flex items-center justify-center z-50">        
       <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative border-1">
         {/* Close Button */}
         <button
