@@ -5,6 +5,7 @@
     WORKDIR /app
 
     COPY package.json yarn.lock* package-lock.json* ./
+    RUN npm install sqlite3
     RUN npm install --frozen-lockfile
 
     COPY . .
@@ -23,6 +24,6 @@
     COPY --from=builder /app/.next/static ./.next/static
     COPY --from=builder /app/public ./public
 
-    EXPOSE 3000
+    EXPOSE 3301
 
     CMD ["node", "server.js"]

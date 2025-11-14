@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faFloppyDisk, faTimes, faArrowLeftLong,  faArrowRightLong, faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faFloppyDisk, faTimes, faArrowLeftLong, faArrowRightLong, faRefresh } from "@fortawesome/free-solid-svg-icons";
 import TaskModal from "./TaskModal";
 
 interface Task {
@@ -125,17 +125,17 @@ export default function TaskList() {
     return d.toLocaleDateString();
   };
 
-const getMemberColor = (member: string) => {
-  switch (member) {
-    case "Asher": return "#22ac00";
-    case "Ellie": return "#20dfd5";
-    case "Evan": return "#5c8df5";
-    case "Owen": return "#f3b43f";
-    case "Katie": return "#c63ce6a8";
-    case "Eric": return "#df3838c7";
-    default: return "#ccc";
-  }
-};
+  const getMemberColor = (member: string) => {
+    switch (member) {
+      case "Asher": return "#22ac00";
+      case "Ellie": return "#20dfd5";
+      case "Evan": return "#5c8df5";
+      case "Owen": return "#f3b43f";
+      case "Katie": return "#c63ce6a8";
+      case "Eric": return "#df3838c7";
+      default: return "#ccc";
+    }
+  };
 
   const formatForInput = (date: Date) => {
     const year = date.getFullYear();
@@ -227,7 +227,7 @@ const getMemberColor = (member: string) => {
 
               {/* Header */}
               <div className="member-header"
-              style={{ backgroundColor: getMemberColor(member) }}
+                style={{ backgroundColor: getMemberColor(member) }}
               >
                 <h3>{member}</h3>
                 <button
@@ -253,7 +253,7 @@ const getMemberColor = (member: string) => {
                   memberTasks.map((task) => (
 
                     <div key={task.id} className="task-card"
-                    style={{ borderColor: getMemberColor(member) }}
+                      style={{ borderColor: getMemberColor(member) }}
                     >
 
                       <div className="flex items-center flex-row gap-2">
@@ -264,23 +264,23 @@ const getMemberColor = (member: string) => {
                           onChange={() => toggleTaskStatus(task)}
                           className={`cursor-pointer ${getMemberColor(member)}`}
                         />
-                        <div onClick={() => setSelectedTask(task)} 
-                      
-                            className={`task-title w-full ${task.status === "complete" ? "line-through text-gray-500" : ""
-                              }`}
-                          >
-                            {task.title}
-                          </div>
+                        <div onClick={() => setSelectedTask(task)}
+
+                          className={`task-title w-full ${task.status === "complete" ? "line-through text-gray-500" : ""
+                            }`}
+                        >
+                          {task.title}
                         </div>
-                        {formatDate(task.due_date) !== selectedDate.toLocaleDateString() && (
-                          <div className="task-date ml-7">
-                            <span className="text-red-600">
-                            {new Date(task.due_date).toLocaleDateString()}
-                            </span>
-                          </div>
-                        )}
                       </div>
-                    
+                      {formatDate(task.due_date ?? null) !== selectedDate.toLocaleDateString() && (
+                        <div className="task-date ml-7">
+                          <span className="text-red-600">
+                            {task.due_date ? new Date(task.due_date).toLocaleDateString() : ""}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
 
                   ))
                 )}

@@ -3,14 +3,13 @@ import sqlite3 from "sqlite3";
 
 const dbPath = path.join(process.cwd(), "family.db");
 export const db = new sqlite3.Database(
- dbPath,
- sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
- (err) => {
+dbPath,
+sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+(err: Error | null) => {
   if (err) {
-   console.error(err.message);
+    console.error(err.message);
   }
-  console.log("Connected to the family database.");
- }
+}
 );
 
 export const apiGet = async (query: string) => {
