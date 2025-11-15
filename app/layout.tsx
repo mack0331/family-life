@@ -30,11 +30,17 @@ export default function RootLayout({
   return (
 
     <html lang="en">
-      <body className="flex">
+      <body className="flex justify-center pl-6">
+        <div>
         <Sidebar />
-        <main className="ml-42 w-full p-6">{children}</main>
+        </div>
+        <div className="w-full center-content">
+        <main className="w-[100%] pl-6">{children}</main>
+
+        </div>
       </body>
     </html>
 
   );
 }
+

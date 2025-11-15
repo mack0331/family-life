@@ -1,29 +1,39 @@
-    # Dockerfile
-    # Stage 1: Install dependencies and build the application
-    FROM node:20-alpine AS builder
+# Stage 1: Build the Next.js app
+FROM node:20-alpine AS builder
 
-    WORKDIR /app
+WORKDIR /app
 
-    COPY package.json yarn.lock* package-lock.json* ./
-    RUN npm install sqlite3
-    RUN npm install --frozen-lockfile
+# Copy dependency files
+COPY package.json package-lock.json* yarn.lock* ./
 
-    COPY . .
+# Install dependencies
+RUN npm install sqlite3
+RUN npm install --frozen-lockfile
 
-    RUN npm run build
+# Copy the rest of the app
+COPY . .
 
-    # Stage 2: Create the production image
-    FROM node:20-alpine AS runner
+# Build the Next.js app
+RUN npm run build
 
-    WORKDIR /app
+# Stage 2: Run the app in production
+FROM node:20-alpine AS runner
 
-    ENV NODE_ENV production
+WORKDIR /app
 
-    # Copy only the necessary files from the builder stage
-    COPY --from=builder /app/.next/standalone ./
-    COPY --from=builder /app/.next/static ./.next/static
-    COPY --from=builder /app/public ./public
+ENV NODE_ENV=production
 
-    EXPOSE 3301
+# Copy only necessary files from builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 
-    CMD ["node", "server.js"]
+# Expose the port
+EXPOSE 3301
+
+# Set the PORT environment variable
+ENV PORT=3301
+
+# Start the Next.js app
+CMD ["npm", "start"]

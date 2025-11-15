@@ -149,7 +149,7 @@ export default function TaskList() {
 
   return (
     <div className="flex text-center flex-col">
-      <div className="absolute top-0 right-0 p-4">
+      <div className="absolute top-0 right-0 p-1">
         <button
           onClick={() => window.location.reload()}
           className="btn-secondary mr-2">
@@ -191,7 +191,7 @@ export default function TaskList() {
 
       {/* Show Overdue Toggle */}
 
-      <div className="flex items-center gap-2 mb-2 mt-2">
+      <div className="flex items-center gap-2 mb-2">
         <input
           type="checkbox"
           checked={showOverdue}
@@ -322,7 +322,7 @@ export default function TaskList() {
               {/* Quick Add Form */}
               {quickAddMember === member && (
                 <div className={`border-1 rounded-sm flex ${memberTasks.length === 0 ? '' : 'mt-2'}`}>
-                  <div className="flex">
+                  <div className="flex w-full">
                     <form onSubmit={handleQuickAddSubmit} className="quick-add-form">
                       <input
                         type="text"
@@ -330,6 +330,7 @@ export default function TaskList() {
                         value={quickAddTitle}
                         onChange={(e) => setQuickAddTitle(e.target.value)}
                         required
+                        className="w-full focus:outline-none"
                       />
                     </form>
                   </div>

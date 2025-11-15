@@ -33,11 +33,12 @@ body {
 }
 
 .quick-add-btn {
-  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-white font-bold;
+  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-white;
 }
 
 .quick-add-form {
-  @apply flex gap-2 p-2;
+  @apply flex w-full p-1 ;
+  
 }
 
 .task-list {
@@ -46,10 +47,6 @@ body {
 
 .task-card {
   @apply border rounded p-2 bg-white shadow-sm hover:shadow-md transition;
-}
-
-.task-title {
-  @apply font-semibold;
 }
 
 .task-date {
